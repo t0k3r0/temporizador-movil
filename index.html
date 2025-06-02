@@ -92,7 +92,7 @@
 </head>
 <body>
     <h1>Temporizador DWEC</h1>
-    <img id="imagenIndice" src="https://github.com/t0k3r0/temporizador-movil/blob/main/indiceSnippets.jpg?raw=true" style="display:none; width:100%; max-width:100%;" alt="Índice de Snippets">
+    <img id="imagenIndice" src="indiceSnippets.jpg" style="display:none; width:100%; max-width:100%;" alt="Índice de Snippets">
     <div id="configuracionInicial">
         <label>Hora actual (HH:MM):
             <input type="time" id="horaInicio"></label><br>
@@ -107,8 +107,8 @@
                 <label>Dificultad
                     <select id="d1">
                         <option value="1">Fácil</option>
-                        <option value="2">Media</option>
-                        <option value="3">Difícil</option>
+                        <option value="1.3">Media</option>
+                        <option value="1.5">Difícil</option>
                     </select>
                 </label>
             </div>
@@ -119,8 +119,8 @@
                 <label>Dificultad
                     <select id="d2">
                         <option value="1">Fácil</option>
-                        <option value="2" selected>Media</option>
-                        <option value="3">Difícil</option>
+                        <option value="1.3" selected>Media</option>
+                        <option value="1.5">Difícil</option>
                     </select>
                 </label>
             </div>
@@ -131,8 +131,8 @@
                 <label>Dificultad
                     <select id="d3">
                         <option value="1">Fácil</option>
-                        <option value="2" selected>Media</option>
-                        <option value="3">Difícil</option>
+                        <option value="1.3" selected>Media</option>
+                        <option value="1.5">Difícil</option>
                     </select>
                 </label>
             </div>
@@ -143,8 +143,8 @@
                 <label>Dificultad
                     <select id="d4">
                         <option value="1">Fácil</option>
-                        <option value="2">Media</option>
-                        <option value="3" selected>Difícil</option>
+                        <option value="1.3">Media</option>
+                        <option value="1.5" selected>Difícil</option>
                     </select>
                 </label>
             </div>
@@ -175,13 +175,12 @@
             <textarea id="nota-ej4" placeholder="Escribe aquí tus notas para el Ejercicio 4"></textarea>
         </div>
     </div>
-    <script>
-        // Set default times
+    <script>// Set default times
         function setDefaultTimes() {
             document.getElementById("horaInicio").value = "15:30";
             document.getElementById("horaFin").value = "19:00";
         }
-
+        
         // Call on page load
         window.onload = () => {
             setDefaultTimes();
@@ -190,20 +189,18 @@
                 document.getElementById(`nota-ej${i}`).addEventListener('input', saveNotes);
             }
             if (Notification.permission !== "granted") {
-    Notification.requestPermission();
-}
-
+                Notification.requestPermission();
+            }
         };
-
+        
         let fases = [];
         let faseIndex = 0;
         let tiempoRestante = 0;
         let tiempoTotalRestante = 0;
         let intervalo;
         let faseInicioTiempo;
-        let examenInicioTiempo;
         let horaInicioExamen;
-
+        
         function calcularYEmpezar() {
             const inicio = document.getElementById("horaInicio").value;
             const fin = document.getElementById("horaFin").value;
@@ -211,7 +208,7 @@
                 alert("Introduce ambas horas.");
                 return;
             }
-
+        
             const [h1, m1] = inicio.split(":").map(Number);
             const [h2, m2] = fin.split(":").map(Number);
             const minutosTotales = (h2 * 60 + m2) - (h1 * 60 + m1);
@@ -219,47 +216,48 @@
                 alert("La hora final debe ser posterior a la inicial.");
                 return;
             }
-
+        
             const ejercicios = [
-                { id: 1, puntos: parseFloat(document.getElementById("p1").value), dificultad: parseInt(document.getElementById("d1").value) },
-                { id: 2, puntos: parseFloat(document.getElementById("p2").value), dificultad: parseInt(document.getElementById("d2").value) },
-                { id: 3, puntos: parseFloat(document.getElementById("p3").value), dificultad: parseInt(document.getElementById("d3").value) },
-                { id: 4, puntos: parseFloat(document.getElementById("p4").value), dificultad: parseInt(document.getElementById("d4").value) }
+                { id: 1, puntos: parseFloat(document.getElementById("p1").value), dificultad: parseFloat(document.getElementById("d1").value) },
+                { id: 2, puntos: parseFloat(document.getElementById("p2").value), dificultad: parseFloat(document.getElementById("d2").value) },
+                { id: 3, puntos: parseFloat(document.getElementById("p3").value), dificultad: parseFloat(document.getElementById("d3").value) },
+                { id: 4, puntos: parseFloat(document.getElementById("p4").value), dificultad: parseFloat(document.getElementById("d4").value) }
             ];
-
-            // Sort by points (descending), then by difficulty (ascending) as tiebreaker
+        
+            // Sort by points (descending), then by difficulty (ascending) for easier exercises first
             ejercicios.sort((a, b) => {
                 if (b.puntos !== a.puntos) return b.puntos - a.puntos;
-                return a.dificultad - b.dificultad;
+                return a.dificultad - b.dificultad; // Lower difficulty gets priority
             });
-
+        
+            // Calculate value as points / difficulty to give more time to easier exercises
             const totalValor = ejercicios.reduce((acc, e) => acc + (e.puntos / e.dificultad), 0);
             const tiempoDisponible = minutosTotales - 10;
             fases = [];
+        
+       // First round: Desarrollo for all exercises
+const totalValorDesarrollo = ejercicios.reduce((acc, e) => acc + (e.puntos / e.dificultad), 0);
+const totalValorRevision = ejercicios.reduce((acc, e) => acc + e.dificultad, 0);
 
-            // Primera vuelta
-            ejercicios.forEach(ej => {
-                const tiempoEj = Math.round((ej.puntos / ej.dificultad) / totalValor * tiempoDisponible);
-                const duracionPorVuelta = Math.floor(tiempoEj / 3);
-                fases.push({ nombre: `Ejercicio ${ej.id} - Vuelta 1`, duracion: duracionPorVuelta });
-            });
+const tiempoDesarrolloDisponible = Math.round(tiempoDisponible * 0.75);
+const tiempoRevisionDisponible = tiempoDisponible - tiempoDesarrolloDisponible;
 
-            // Segunda vuelta
-            ejercicios.forEach(ej => {
-                const tiempoEj = Math.round((ej.puntos / ej.dificultad) / totalValor * tiempoDisponible);
-                const duracionPorVuelta = Math.floor(tiempoEj / 3);
-                fases.push({ nombre: `Ejercicio ${ej.id} - Vuelta 2`, duracion: duracionPorVuelta });
-            });
+ejercicios.forEach(ej => {
+    const proporcionDesarrollo = (ej.puntos / ej.dificultad) / totalValorDesarrollo;
+    const tiempoDesarrollo = Math.round(proporcionDesarrollo * tiempoDesarrolloDisponible);
+    fases.push({ nombre: `Ejercicio ${ej.id} - Desarrollo`, duracion: tiempoDesarrollo });
+});
 
-            // Tercera vuelta
-            ejercicios.forEach(ej => {
-                const tiempoEj = Math.round((ej.puntos / ej.dificultad) / totalValor * tiempoDisponible);
-                const duracionPorVuelta = Math.floor(tiempoEj / 3);
-                const duracionUltimaVuelta = tiempoEj - 2 * duracionPorVuelta;
-                fases.push({ nombre: `Ejercicio ${ej.id} - Vuelta 3`, duracion: duracionUltimaVuelta });
-            });
+ejercicios.forEach(ej => {
+    const proporcionRevision = ej.dificultad / totalValorRevision;
+    const tiempoRevision = Math.round(proporcionRevision * tiempoRevisionDisponible);
+    fases.push({ nombre: `Ejercicio ${ej.id} - Revisión`, duracion: tiempoRevision });
+});
 
+        
+            // Final buffer phase
             fases.push({ nombre: "Revisión Final / Buffer", duracion: 10 });
+        
             tiempoTotalRestante = fases.reduce((acc, fase) => acc + fase.duracion, 0) * 60;
             horaInicioExamen = new Date();
             horaInicioExamen.setHours(h1, m1, 0, 0);
@@ -269,7 +267,7 @@
             document.getElementById("imagenIndice").style.display = "block";
             actualizarFase();
         }
-
+        
         function mostrarMapaFases() {
             const mapa = document.getElementById("fase-mapa");
             mapa.innerHTML = "";
@@ -286,18 +284,17 @@
                 tiempoAcumulado += fase.duracion;
             });
         }
-
+        
         function instruccionesPorFase(nombre) {
-            if (nombre.includes("Vuelta 1")) return "🟠 Plantea estructura y comprensión general.";
-            if (nombre.includes("Vuelta 2")) return "🟡 Implementa lógica, DOM y funcionalidad.";
-            if (nombre.includes("Vuelta 3")) return "🟢 Revisa, prueba y mejora visualmente.";
+            if (nombre.includes("Desarrollo")) return "🟡 Implementa lógica, DOM y funcionalidad.";
+            if (nombre.includes("Revisión")) return "🟢 Revisa, prueba y mejora visualmente.";
             if (nombre.includes("Buffer")) return "🔁 Revisa todo lo que falte o mejora detalles.";
             return "";
         }
-
+        
         function saltarAFase(nuevoIndex) {
             if (nuevoIndex >= fases.length || nuevoIndex < 0) return;
-
+        
             // Calcular tiempo a ajustar para tiempoTotalRestante
             let tiempoAjuste = 0;
             if (nuevoIndex > faseIndex) {
@@ -311,75 +308,75 @@
                     tiempoAjuste -= fases[i].duracion * 60;
                 }
             }
-
+        
             // Actualizar tiempo total restante
             tiempoTotalRestante += tiempoAjuste;
             if (tiempoTotalRestante < 0) tiempoTotalRestante = 0;
-
+        
             // Actualizar índice de fase
             faseIndex = nuevoIndex;
-
+        
             // Detener temporizador actual
             if (intervalo) clearInterval(intervalo);
             document.getElementById("continuar-btn").style.display = "none";
-
+        
             // Iniciar nueva fase
             actualizarFase();
         }
-
+        
         function actualizarFase() {
-    if (faseIndex >= fases.length) {
-        document.getElementById("current-phase").textContent = "✅ Examen finalizado";
-        clearInterval(intervalo);
-        return;
-    }
-
-    const fase = fases[faseIndex];
-    const ahora = Date.now();
-    faseInicioTiempo = ahora;
-    tiempoRestante = fase.duracion * 60;
-
-    document.getElementById("current-phase").textContent = fase.nombre;
-    document.getElementById("instructions").textContent = instruccionesPorFase(fase.nombre);
-
-    for (let i = 0; i < fases.length; i++) {
-        const div = document.getElementById(`fase-${i}`);
-        div.classList.remove("fase-activa", "fase-completada");
-        if (i < faseIndex) div.classList.add("fase-completada");
-        if (i === faseIndex) div.classList.add("fase-activa");
-    }
-
-    notificarCambioFase(fase.nombre);
-
-    if (intervalo) clearInterval(intervalo);
-    intervalo = setInterval(() => {
-        const ahora = Date.now();
-        const segundosTranscurridos = Math.floor((ahora - faseInicioTiempo) / 1000);
-        const segundosFaseRestantes = Math.max(0, tiempoRestante - segundosTranscurridos);
-        const minutos = Math.floor(segundosFaseRestantes / 60);
-        const segundos = segundosFaseRestantes % 60;
-        document.getElementById("timer").textContent = `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
-
-        const totalRestantes = Math.max(0, tiempoTotalRestante - segundosTranscurridos);
-        const minutosTot = Math.floor(totalRestantes / 60);
-        const segundosTot = totalRestantes % 60;
-        document.getElementById("total-time").textContent = `Total: ${String(minutosTot).padStart(2, '0')}:${String(segundosTot).padStart(2, '0')}`;
-
-        if (segundosFaseRestantes <= 0) {
-            clearInterval(intervalo);
-            tiempoTotalRestante -= tiempoRestante;
-            faseIndex++;
-            actualizarFase();
+            if (faseIndex >= fases.length) {
+                document.getElementById("current-phase").textContent = "✅ Examen finalizado";
+                clearInterval(intervalo);
+                return;
+            }
+        
+            const fase = fases[faseIndex];
+            const ahora = Date.now();
+            faseInicioTiempo = ahora;
+            tiempoRestante = fase.duracion * 60;
+        
+            document.getElementById("current-phase").textContent = fase.nombre;
+            document.getElementById("instructions").textContent = instruccionesPorFase(fase.nombre);
+        
+            for (let i = 0; i < fases.length; i++) {
+                const div = document.getElementById(`fase-${i}`);
+                div.classList.remove("fase-activa", "fase-completada");
+                if (i < faseIndex) div.classList.add("fase-completada");
+                if (i === faseIndex) div.classList.add("fase-activa");
+            }
+        
+            notificarCambioFase(fase.nombre);
+        
+            if (intervalo) clearInterval(intervalo);
+            intervalo = setInterval(() => {
+                const ahora = Date.now();
+                const segundosTranscurridos = Math.floor((ahora - faseInicioTiempo) / 1000);
+                const segundosFaseRestantes = Math.max(0, tiempoRestante - segundosTranscurridos);
+                const minutos = Math.floor(segundosFaseRestantes / 60);
+                const segundos = segundosFaseRestantes % 60;
+                document.getElementById("timer").textContent = `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+        
+                const totalRestantes = Math.max(0, tiempoTotalRestante - segundosTranscurridos);
+                const minutosTot = Math.floor(totalRestantes / 60);
+                const segundosTot = totalRestantes % 60;
+                document.getElementById("total-time").textContent = `Total: ${String(minutosTot).padStart(2, '0')}:${String(segundosTot).padStart(2, '0')}`;
+        
+                if (segundosFaseRestantes <= 0) {
+                    clearInterval(intervalo);
+                    tiempoTotalRestante -= tiempoRestante;
+                    faseIndex++;
+                    actualizarFase();
+                }
+            }, 1000);
         }
-    }, 1000);
-}
-
+        
         function continuarFase() {
             document.getElementById("continuar-btn").style.display = "none";
             faseIndex++;
             actualizarFase();
         }
-
+        
         function actualizarTimer() {
             const minutos = Math.floor(tiempoRestante / 60).toString().padStart(2, '0');
             const segundos = (tiempoRestante % 60).toString().padStart(2, '0');
@@ -388,7 +385,7 @@
             document.getElementById("timer").textContent = `${minutos}:${segundos}`;
             document.getElementById("total-time").textContent = `Total: ${minutosTotal}:${segundosTotal}`;
         }
-
+        
         // Save notes to localStorage
         function saveNotes() {
             for (let i = 1; i <= 4; i++) {
@@ -396,7 +393,7 @@
                 localStorage.setItem(`nota-ej${i}`, nota);
             }
         }
-
+        
         // Load notes from localStorage
         function loadNotes() {
             for (let i = 1; i <= 4; i++) {
@@ -404,31 +401,30 @@
                 if (nota) document.getElementById(`nota-ej${i}`).value = nota;
             }
         }
+        
         function notificarCambioFase(nombreFase) {
-    if (Notification.permission === "granted") {
-        new Notification("Cambio de fase", { body: `Ahora: ${nombreFase}` });
-    }
-
-    let mensaje = `⚠️ Nueva fase: ${nombreFase}`;
-    let parpadeo = true;
-    const originalTitle = document.title;
-
-    const blinkInterval = setInterval(() => {
-        document.title = parpadeo ? mensaje : originalTitle;
-        parpadeo = !parpadeo;
-    }, 200);
-
-    // Detener parpadeo después de 10 segundos
-    setTimeout(() => {
-        clearInterval(blinkInterval);
-        document.title = originalTitle;
-    }, 20000);
-    if ("vibrate" in navigator) {
-    navigator.vibrate([100, 500, 200,500,400,500,800,500,1600]); // vibrar - pausa - vibrar
-}
-
-}
-
-    </script>
+            if (Notification.permission === "granted") {
+                new Notification("Cambio de fase", { body: `Ahora: ${nombreFase}` });
+            }
+        
+            let mensaje = `⚠️ Nueva fase: ${nombreFase}`;
+            let parpadeo = true;
+            const originalTitle = document.title;
+        
+            const blinkInterval = setInterval(() => {
+                document.title = parpadeo ? mensaje : originalTitle;
+                parpadeo = !parpadeo;
+            }, 200);
+        
+            // Detener parpadeo después de 10 segundos
+            setTimeout(() => {
+                clearInterval(blinkInterval);
+                document.title = originalTitle;
+            }, 20000);
+            if ("vibrate" in navigator) {
+                navigator.vibrate([100, 500, 200,500,400,500,800,500,1600]); // vibrar - pausa - vibrar
+            }
+        }
+        </script>
 </body>
 </html>
