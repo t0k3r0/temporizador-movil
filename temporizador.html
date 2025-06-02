@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Temporizador Examen DWEC</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 2rem;
+            background: #f9f9f9;
+        }
+        h1 {
+            margin-bottom: 1rem;
+        }
+        #timer,
+        #total-time {
+            font-size: 3rem;
+            margin: 1rem 0;
+        }
+        #current-phase {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        #instructions {
+            font-size: 1.1rem;
+            color: #444;
+            margin-bottom: 2rem;
+        }
+        input,
+        select,
+        button {
+            padding: 0.5rem;
+            font-size: 1rem;
+            margin: 0.5rem;
+        }
+        #fase-mapa {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        .fase-bloque {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 0.5rem;
+            margin: 0.25rem;
+            font-size: 0.9rem;
+            min-width: 150px;
+            cursor: pointer;
+        }
+        .fase-bloque:hover {
+            background: #e0e0e0;
+        }
+        .fase-activa {
+            background: #ffe082;
+            font-weight: bold;
+        }
+        .fase-completada {
+            background: #c8e6c9;
+            text-decoration: line-through;
+        }
+        #notas {
+            margin-top: 2rem;
+        }
+        .nota-ejercicio {
+            margin: 1rem;
+            padding: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .nota-ejercicio textarea {
+            width: 100%;
+            min-height: 100px;
+            font-size: 1rem;
+        }
+        #continuar-btn {
+            display: none;
+            padding: 0.5rem 1rem;
+            font-size: 1.1rem;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #continuar-btn:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Temporizador DWEC</h1>
+    <img id="imagenIndice" src="indiceSnippets.jpg" style="display:none; width:100%; max-width:100%;" alt="Índice de Snippets">
+    <div id="configuracionInicial">
+        <label>Hora actual (HH:MM):
+            <input type="time" id="horaInicio"></label><br>
+        <label>Hora final (HH:MM):
+            <input type="time" id="horaFin"></label><br><br>
+        <fieldset style="border:1px solid #ccc; padding:1rem; display:inline-block;">
+            <legend>Configuración por ejercicio</legend>
+            <div>
+                Ejercicio 1:
+                <label>Puntuación
+                    <input type="number" id="p1" value="1" min="0" step="0.1"></label>
+                <label>Dificultad
+                    <select id="d1">
+                        <option value="1">Fácil</option>
+                        <option value="2">Media</option>
+                        <option value="3">Difícil</option>
+                    </select>
+                </label>
+            </div>
+            <div>
+                Ejercicio 2:
+                <label>Puntuación
+                    <input type="number" id="p2" value="3" min="0" step="0.1"></label>
+                <label>Dificultad
+                    <select id="d2">
+                        <option value="1">Fácil</option>
+                        <option value="2" selected>Media</option>
+                        <option value="3">Difícil</option>
+                    </select>
+                </label>
+            </div>
+            <div>
+                Ejercicio 3:
+                <label>Puntuación
+                    <input type="number" id="p3" value="3" min="0" step="0.1"></label>
+                <label>Dificultad
+                    <select id="d3">
+                        <option value="1">Fácil</option>
+                        <option value="2" selected>Media</option>
+                        <option value="3">Difícil</option>
+                    </select>
+                </label>
+            </div>
+            <div>
+                Ejercicio 4:
+                <label>Puntuación
+                    <input type="number" id="p4" value="3" min="0" step="0.1"></label>
+                <label>Dificultad
+                    <select id="d4">
+                        <option value="1">Fácil</option>
+                        <option value="2">Media</option>
+                        <option value="3" selected>Difícil</option>
+                    </select>
+                </label>
+            </div>
+        </fieldset><br><br>
+    </div>
+    <button onclick="calcularYEmpezar()">Calcular y empezar</button>
+    <div id="current-phase">Pulsa empezar para iniciar el examen</div>
+    <div id="instructions"></div>
+    <div id="timer">00:00</div>
+    <div id="total-time">Total: 00:00</div>
+    <div id="fase-mapa"></div>
+    <button id="continuar-btn" onclick="continuarFase()">Continuar con la siguiente fase</button>
+    <div id="notas">
+        <div class="nota-ejercicio">
+            <h3>Notas Ejercicio 1</h3>
+            <textarea id="nota-ej1" placeholder="Escribe aquí tus notas para el Ejercicio 1"></textarea>
+        </div>
+        <div class="nota-ejercicio">
+            <h3>Notas Ejercicio 2</h3>
+            <textarea id="nota-ej2" placeholder="Escribe aquí tus notas para el Ejercicio 2"></textarea>
+        </div>
+        <div class="nota-ejercicio">
+            <h3>Notas Ejercicio 3</h3>
+            <textarea id="nota-ej3" placeholder="Escribe aquí tus notas para el Ejercicio 3"></textarea>
+        </div>
+        <div class="nota-ejercicio">
+            <h3>Notas Ejercicio 4</h3>
+            <textarea id="nota-ej4" placeholder="Escribe aquí tus notas para el Ejercicio 4"></textarea>
+        </div>
+    </div>
+    <script>
+        // Set default times
+        function setDefaultTimes() {
+            document.getElementById("horaInicio").value = "15:30";
+            document.getElementById("horaFin").value = "19:00";
+        }
+
+        // Call on page load
+        window.onload = () => {
+            setDefaultTimes();
+            loadNotes();
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`nota-ej${i}`).addEventListener('input', saveNotes);
+            }
+            if (Notification.permission !== "granted") {
+    Notification.requestPermission();
+}
+
+        };
+
+        let fases = [];
+        let faseIndex = 0;
+        let tiempoRestante = 0;
+        let tiempoTotalRestante = 0;
+        let intervalo;
+        let faseInicioTiempo;
+        let examenInicioTiempo;
+        let horaInicioExamen;
+
+        function calcularYEmpezar() {
+            const inicio = document.getElementById("horaInicio").value;
+            const fin = document.getElementById("horaFin").value;
+            if (!inicio || !fin) {
+                alert("Introduce ambas horas.");
+                return;
+            }
+
+            const [h1, m1] = inicio.split(":").map(Number);
+            const [h2, m2] = fin.split(":").map(Number);
+            const minutosTotales = (h2 * 60 + m2) - (h1 * 60 + m1);
+            if (minutosTotales <= 0) {
+                alert("La hora final debe ser posterior a la inicial.");
+                return;
+            }
+
+            const ejercicios = [
+                { id: 1, puntos: parseFloat(document.getElementById("p1").value), dificultad: parseInt(document.getElementById("d1").value) },
+                { id: 2, puntos: parseFloat(document.getElementById("p2").value), dificultad: parseInt(document.getElementById("d2").value) },
+                { id: 3, puntos: parseFloat(document.getElementById("p3").value), dificultad: parseInt(document.getElementById("d3").value) },
+                { id: 4, puntos: parseFloat(document.getElementById("p4").value), dificultad: parseInt(document.getElementById("d4").value) }
+            ];
+
+            // Sort by points (descending), then by difficulty (ascending) as tiebreaker
+            ejercicios.sort((a, b) => {
+                if (b.puntos !== a.puntos) return b.puntos - a.puntos;
+                return a.dificultad - b.dificultad;
+            });
+
+            const totalValor = ejercicios.reduce((acc, e) => acc + (e.puntos / e.dificultad), 0);
+            const tiempoDisponible = minutosTotales - 10;
+            fases = [];
+
+            // Primera vuelta
+            ejercicios.forEach(ej => {
+                const tiempoEj = Math.round((ej.puntos / ej.dificultad) / totalValor * tiempoDisponible);
+                const duracionPorVuelta = Math.floor(tiempoEj / 3);
+                fases.push({ nombre: `Ejercicio ${ej.id} - Vuelta 1`, duracion: duracionPorVuelta });
+            });
+
+            // Segunda vuelta
+            ejercicios.forEach(ej => {
+                const tiempoEj = Math.round((ej.puntos / ej.dificultad) / totalValor * tiempoDisponible);
+                const duracionPorVuelta = Math.floor(tiempoEj / 3);
+                fases.push({ nombre: `Ejercicio ${ej.id} - Vuelta 2`, duracion: duracionPorVuelta });
+            });
+
+            // Tercera vuelta
+            ejercicios.forEach(ej => {
+                const tiempoEj = Math.round((ej.puntos / ej.dificultad) / totalValor * tiempoDisponible);
+                const duracionPorVuelta = Math.floor(tiempoEj / 3);
+                const duracionUltimaVuelta = tiempoEj - 2 * duracionPorVuelta;
+                fases.push({ nombre: `Ejercicio ${ej.id} - Vuelta 3`, duracion: duracionUltimaVuelta });
+            });
+
+            fases.push({ nombre: "Revisión Final / Buffer", duracion: 10 });
+            tiempoTotalRestante = fases.reduce((acc, fase) => acc + fase.duracion, 0) * 60;
+            horaInicioExamen = new Date();
+            horaInicioExamen.setHours(h1, m1, 0, 0);
+            mostrarMapaFases();
+            faseIndex = 0;
+            document.getElementById("configuracionInicial").style.display = "none";
+            document.getElementById("imagenIndice").style.display = "block";
+            actualizarFase();
+        }
+
+        function mostrarMapaFases() {
+            const mapa = document.getElementById("fase-mapa");
+            mapa.innerHTML = "";
+            let tiempoAcumulado = 0;
+            fases.forEach((fase, i) => {
+                const div = document.createElement("div");
+                div.className = "fase-bloque";
+                div.id = `fase-${i}`;
+                const finFase = new Date(horaInicioExamen.getTime() + tiempoAcumulado * 60 * 1000);
+                const horaFin = finFase.toTimeString().slice(0, 5);
+                div.textContent = `${fase.nombre} (${fase.duracion} min, Fin: ${horaFin})`;
+                div.onclick = () => saltarAFase(i);
+                mapa.appendChild(div);
+                tiempoAcumulado += fase.duracion;
+            });
+        }
+
+        function instruccionesPorFase(nombre) {
+            if (nombre.includes("Vuelta 1")) return "🟠 Plantea estructura y comprensión general.";
+            if (nombre.includes("Vuelta 2")) return "🟡 Implementa lógica, DOM y funcionalidad.";
+            if (nombre.includes("Vuelta 3")) return "🟢 Revisa, prueba y mejora visualmente.";
+            if (nombre.includes("Buffer")) return "🔁 Revisa todo lo que falte o mejora detalles.";
+            return "";
+        }
+
+        function saltarAFase(nuevoIndex) {
+            if (nuevoIndex >= fases.length || nuevoIndex < 0) return;
+
+            // Calcular tiempo a ajustar para tiempoTotalRestante
+            let tiempoAjuste = 0;
+            if (nuevoIndex > faseIndex) {
+                // Saltar hacia adelante: restar el tiempo de las fases omitidas
+                for (let i = faseIndex; i < nuevoIndex; i++) {
+                    tiempoAjuste -= fases[i].duracion * 60;
+                }
+            } else if (nuevoIndex < faseIndex) {
+                // Saltar hacia atrás: sumar el tiempo de las fases reactivadas
+                for (let i = nuevoIndex; i < faseIndex; i++) {
+                    tiempoAjuste -= fases[i].duracion * 60;
+                }
+            }
+
+            // Actualizar tiempo total restante
+            tiempoTotalRestante += tiempoAjuste;
+            if (tiempoTotalRestante < 0) tiempoTotalRestante = 0;
+
+            // Actualizar índice de fase
+            faseIndex = nuevoIndex;
+
+            // Detener temporizador actual
+            if (intervalo) clearInterval(intervalo);
+            document.getElementById("continuar-btn").style.display = "none";
+
+            // Iniciar nueva fase
+            actualizarFase();
+        }
+
+        function actualizarFase() {
+    if (faseIndex >= fases.length) {
+        document.getElementById("current-phase").textContent = "✅ Examen finalizado";
+        clearInterval(intervalo);
+        return;
+    }
+
+    const fase = fases[faseIndex];
+    const ahora = Date.now();
+    faseInicioTiempo = ahora;
+    tiempoRestante = fase.duracion * 60;
+
+    document.getElementById("current-phase").textContent = fase.nombre;
+    document.getElementById("instructions").textContent = instruccionesPorFase(fase.nombre);
+
+    for (let i = 0; i < fases.length; i++) {
+        const div = document.getElementById(`fase-${i}`);
+        div.classList.remove("fase-activa", "fase-completada");
+        if (i < faseIndex) div.classList.add("fase-completada");
+        if (i === faseIndex) div.classList.add("fase-activa");
+    }
+
+    notificarCambioFase(fase.nombre);
+
+    if (intervalo) clearInterval(intervalo);
+    intervalo = setInterval(() => {
+        const ahora = Date.now();
+        const segundosTranscurridos = Math.floor((ahora - faseInicioTiempo) / 1000);
+        const segundosFaseRestantes = Math.max(0, tiempoRestante - segundosTranscurridos);
+        const minutos = Math.floor(segundosFaseRestantes / 60);
+        const segundos = segundosFaseRestantes % 60;
+        document.getElementById("timer").textContent = `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+
+        const totalRestantes = Math.max(0, tiempoTotalRestante - segundosTranscurridos);
+        const minutosTot = Math.floor(totalRestantes / 60);
+        const segundosTot = totalRestantes % 60;
+        document.getElementById("total-time").textContent = `Total: ${String(minutosTot).padStart(2, '0')}:${String(segundosTot).padStart(2, '0')}`;
+
+        if (segundosFaseRestantes <= 0) {
+            clearInterval(intervalo);
+            tiempoTotalRestante -= tiempoRestante;
+            faseIndex++;
+            actualizarFase();
+        }
+    }, 1000);
+}
+
+        function continuarFase() {
+            document.getElementById("continuar-btn").style.display = "none";
+            faseIndex++;
+            actualizarFase();
+        }
+
+        function actualizarTimer() {
+            const minutos = Math.floor(tiempoRestante / 60).toString().padStart(2, '0');
+            const segundos = (tiempoRestante % 60).toString().padStart(2, '0');
+            const minutosTotal = Math.floor(tiempoTotalRestante / 60).toString().padStart(2, '0');
+            const segundosTotal = (tiempoTotalRestante % 60).toString().padStart(2, '0');
+            document.getElementById("timer").textContent = `${minutos}:${segundos}`;
+            document.getElementById("total-time").textContent = `Total: ${minutosTotal}:${segundosTotal}`;
+        }
+
+        // Save notes to localStorage
+        function saveNotes() {
+            for (let i = 1; i <= 4; i++) {
+                const nota = document.getElementById(`nota-ej${i}`).value;
+                localStorage.setItem(`nota-ej${i}`, nota);
+            }
+        }
+
+        // Load notes from localStorage
+        function loadNotes() {
+            for (let i = 1; i <= 4; i++) {
+                const nota = localStorage.getItem(`nota-ej${i}`);
+                if (nota) document.getElementById(`nota-ej${i}`).value = nota;
+            }
+        }
+        function notificarCambioFase(nombreFase) {
+    if (Notification.permission === "granted") {
+        new Notification("Cambio de fase", { body: `Ahora: ${nombreFase}` });
+    }
+
+    let mensaje = `⚠️ Nueva fase: ${nombreFase}`;
+    let parpadeo = true;
+    const originalTitle = document.title;
+
+    const blinkInterval = setInterval(() => {
+        document.title = parpadeo ? mensaje : originalTitle;
+        parpadeo = !parpadeo;
+    }, 200);
+
+    // Detener parpadeo después de 10 segundos
+    setTimeout(() => {
+        clearInterval(blinkInterval);
+        document.title = originalTitle;
+    }, 20000);
+    if ("vibrate" in navigator) {
+    navigator.vibrate([200, 100, 200]); // vibrar - pausa - vibrar
+}
+
+}
+
+    </script>
+</body>
+</html>
