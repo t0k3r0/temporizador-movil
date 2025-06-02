@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Temporizador Examen DWEC</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      background: black;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    h1 { font-size: 1.5rem; margin: 0.5rem; }
+    #fase { font-size: 1.2rem; margin: 1rem 0; }
+    #tiempo { font-size: 3rem; font-weight: bold; }
+    button {
+      font-size: 1.2rem;
+      padding: 0.8rem 1.2rem;
+      margin-top: 1rem;
+      border: none;
+      border-radius: 10px;
+      background: limegreen;
+      color: black;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>DWEC Pocket Timer</h1>
+  <div id="fase">Pulsa para comenzar</div>
+  <div id="tiempo">00:00</div>
+  <button id="start">Iniciar</button>
+
+  <script>
+    let fases = [
+      { nombre: "Vuelta 1 - Ej 1", duracion: 10 },
+      { nombre: "Vuelta 1 - Ej 2", duracion: 10 },
+      { nombre: "Vuelta 2 - Ej 1", duracion: 10 },
+      { nombre: "Revisión final", duracion: 5 }
+    ];
+    let faseIndex = 0;
+    let segundosRestantes = 0;
+    let intervalo = null;
+
+    const faseEl = document.getElementById("fase");
+    const tiempoEl = document.getElementById("tiempo");
+    const startBtn = document.getElementById("start");
+
+    function pedirPermisoNotificaciones() {
+      if ("Notification" in window) Notification.requestPermission();
+    }
+
+    function notificar(titulo, cuerpo) {
+      if (Notification.permission === "granted") {
+        new Notification(titulo, { body: cuerpo });
+      }
+      if ("vibrate" in navigator) {
+        navigator.vibrate([200, 100, 200]);
+      }
+    }
+
+    function siguienteFase() {
+      if (faseIndex >= fases.length) {
+        faseEl.textContent = "✅ Finalizado";
+        tiempoEl.textContent = "00:00";
+        notificar("DWEC Timer", "¡Examen finalizado!");
+        clearInterval(intervalo);
+        return;
+      }
+
+      const fase = fases[faseIndex];
+      segundosRestantes = fase.duracion * 60;
+      faseEl.textContent = fase.nombre;
+      actualizarTiempo();
+      notificar("Cambio de fase", fase.nombre);
+    }
+
+    function actualizarTiempo() {
+      tiempoEl.textContent = `${Math.floor(segundosRestantes / 60).toString().padStart(2, '0')}:${(segundosRestantes % 60).toString().padStart(2, '0')}`;
+    }
+
+    function tick() {
+      segundosRestantes--;
+      if (segundosRestantes <= 0) {
+        faseIndex++;
+        siguienteFase();
+      } else {
+        actualizarTiempo();
+      }
+    }
+
+    startBtn.onclick = () => {
+      if (intervalo) return;
+      pedirPermisoNotificaciones();
+      startBtn.style.display = "none";
+      siguienteFase();
+      intervalo = setInterval(tick, 1000);
+    };
+  </script>
+</body>
+</html>
